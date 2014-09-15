@@ -26,8 +26,14 @@ module Pacer
       elsif url.is_a? String and url !~ /^(plocal|local|remote|memory):/
         url = "plocal:#{ url }"
       end
-      username = args.delete :username if args
-      password = args.delete :password if args
+      if args
+        username          = args.delete :username
+        password          = args.delete :password
+        transactional     = args.delete :transactional
+        lightweight_edges = args.delete :lightweight_edges
+        edge_classes      = args.delete :edge_classes
+        vertex_classes    = args.delete :vertex_classes
+      end
       if url.is_a? String
         open = proc do
           # TODO: can / should I cache connections? Is it essential to shut down Orient?
@@ -41,8 +47,15 @@ module Pacer
               end
             Pacer.open_graphs[[url, username]] = Pacer::Orient::FactoryContainer.new(factory)
           end
-          graph = factory.get()
-          graph.setAutoStartTx false
+          if transactional == false
+            graph = factory.getNoTx()
+          else
+            graph = factory.getTx()
+          end
+          graph.useLightweightEdges = lightweight_edges if lightweight_edges == false
+          graph.useClassForEdgeLabel = edge_classes if edge_classes == false
+          graph.useClassForVertexLabel = vertex_classes if vertex_classes == false
+          #graph.setAutoStartTx false
           graph
         end
         shutdown = proc do |g|
