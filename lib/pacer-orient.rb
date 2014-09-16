@@ -62,11 +62,11 @@ module Pacer
           factory = Pacer.open_graphs.delete [url, username]
           factory.shutdown if factory
         end
-        Orient::Graph.new(Pacer::YamlEncoder, open, shutdown)
+        Orient::Graph.new(Pacer::Orient::Encoder, open, shutdown)
       else
         # Don't register the new graph so that it won't be automatically closed.
         graph = url
-        Orient::Graph.new Pacer::YamlEncoder, proc { graph }
+        Orient::Graph.new Pacer::Orient::Encoder, proc { graph }
       end
     end
 
