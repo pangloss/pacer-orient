@@ -4,6 +4,7 @@ require 'pacer-orient/orient_type'
 require 'pacer-orient/property'
 require 'pacer-orient/encoder'
 require 'pacer-orient/record_id'
+require 'pacer-orient/factory_container'
 
 module Pacer
   module Orient
@@ -232,23 +233,6 @@ module Pacer
             @in_pure_transaction = false
           end
         end
-      end
-    end
-
-    class FactoryContainer
-      attr_reader :factory
-
-      def initialize(f)
-        @factory = f
-      end
-
-      def get
-        factory.get
-      end
-
-      # Pacer calls shutdown on all cached graphs when it exits. Orient caches this factory.
-      def shutdown
-        factory.close
       end
     end
   end

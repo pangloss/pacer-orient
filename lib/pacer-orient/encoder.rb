@@ -84,11 +84,23 @@ module Pacer::Orient
       when JavaDate
         Time.at(value.getTime() / 1000.0)
       when JavaSet
-        value.to_set
+        s = Set[]
+        value.each do |v|
+          s.add decode_property(v)
+        end
+        s
       when JavaMap
-        Hash[value]
+        h = {}
+        value.each do |k, v|
+          h[decode_property(k)] = decode_property(v)
+        end
+        h
       when JavaList
-        value.to_a
+        a = []
+        value.each do |v|
+          a.push decode_property(v)
+        end
+        a
       else
         value
       end

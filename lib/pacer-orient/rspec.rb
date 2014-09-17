@@ -17,16 +17,12 @@ class RSpec::GraphRunner
       dir = Pathname.new(path1)
       dir.rmtree if dir.exist?
       @orient_graph = Pacer.orient(path1, lightweight_edges: false, edge_classes: false)
-      p orient_graph: @orient_graph
-      @orient_graph
     end
 
+    # Can't use 2 graphs on 1 thread.
     def orient_graph2
       return @orient_graph2 if @orient_graph2
-      path2 = File.expand_path('/tmp/spec.orient.2')
-      dir = Pathname.new(path2)
-      dir.rmtree if dir.exist?
-      @orient_graph2 = Pacer.orient(path2, lightweight_edges: false, edge_classes: false)
+      @orient_graph2 = Pacer.tg
     end
 
     def orient_graph_no_indices
