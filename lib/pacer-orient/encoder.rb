@@ -24,12 +24,16 @@ module Pacer::Orient
       when true, false
         value.to_java
       when DateTime, Time, JavaDate
-        f = value.to_time.to_f
+        f = if value.is_a? JavaDate
+              value.getTime / 1000.0
+            else
+              value.to_time.to_f
+            end
         i = f.truncate
         r = (f.remainder(1) * 10000).round
         if value.is_a? DateTime
           c = 1
-        elsif value.utc?
+        elsif value.is_a? Time and value.utc?
           c = 2
         else
           c = 3
@@ -38,11 +42,11 @@ module Pacer::Orient
       when Date
         ["D", value.to_time.to_i].pack("AN").to_java_bytes
       when Set
-        value.to_hashset
+        value.map { |x| encode_property(x) }.to_hashset
       when Hash
-        value.to_hash_map
+        value.to_hash_map { |k, v| [encode_property(k), encode_property(v)] }
       when Enumerable
-        value.to_list
+        value.map { |x| encode_property(x) }.to_list
       when JavaSet, JavaMap, JavaList
         value
       else

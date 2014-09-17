@@ -37,11 +37,11 @@ module Pacer::Orient
       Property.new self, p if p
     end
 
-    def property!(name, otype = :any)
+    def property!(name, otype)
       p = raw_property(name)
       unless p
         p = graph.send(:in_pure_transaction) do
-          type.createProperty(name, graph.property_type(otype))
+          type.createProperty(name.to_s, graph.property_type(otype))
         end
       end
       Property.new self, p

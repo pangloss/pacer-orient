@@ -3,6 +3,7 @@ require 'set'
 require 'pacer-orient/orient_type'
 require 'pacer-orient/property'
 require 'pacer-orient/encoder'
+require 'pacer-orient/record_id'
 
 module Pacer
   module Orient
@@ -124,6 +125,7 @@ module Pacer
         if extensions.is_a? String
           args = args.unshift sql if sql
           sql = extensions
+          extensions = []
         end
         sql_command(sql, *args).iterator.to_route(based_on: self.v(extensions))
       end
@@ -132,12 +134,14 @@ module Pacer
         if extensions.is_a? String
           args = args.unshift sql if sql
           sql = extensions
+          extensions = []
         end
         sql_command(sql, *args).iterator.to_route(based_on: self.e(extensions))
       end
 
       def sql_command(sql, *args)
-        raw_sql(sql, *args)
+        args = args.map { |a| encoder.encode_property(a) }
+        blueprints_graph.command(OCommandSQL.new(sql)).execute(*args)
       end
 
       def orient_type!(t, element_type = :vertex)
@@ -204,6 +208,12 @@ module Pacer
       def create_key_index(name, element_type = :vertex, itype = :non_unique)
         type = orient_type(nil, element_type)
         type.property!(name).create_index!(itype) if type
+      end
+
+      def drop_key_index(name, element_type = :vertex)
+        in_pure_transaction do
+          super
+        end
       end
 
       private
