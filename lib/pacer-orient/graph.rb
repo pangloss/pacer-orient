@@ -5,6 +5,7 @@ require 'pacer-orient/property'
 require 'pacer-orient/encoder'
 require 'pacer-orient/record_id'
 require 'pacer-orient/factory_container'
+require 'pacer-orient/sql_filter'
 
 module Pacer
   module Orient
@@ -25,6 +26,10 @@ module Pacer
         :float        => OType::FLOAT,
         :double       => OType::DOUBLE,       # use this one
         :decimal      => OType::DECIMAL,      # use this one
+       #If encoding dates to binary
+       #:date         => OType::BINARY,
+       #:datetime     => OType::BINARY,
+       #:date_time    => OType::BINARY,
         :date         => OType::DATE,         # use this one
         :datetime     => OType::DATETIME,     # use this one
         :date_time    => OType::DATETIME,
@@ -136,13 +141,11 @@ module Pacer
         blueprints_graph.useClassForVertexLabel = b
       end
 
-      def sql(extensions, sql = nil, args)
-        if extensions.is_a? String
-          args = sql
-          sql = extensions
-          extensions = []
-        end
-        sql_command(sql, args).iterator.to_route(based_on: self.v(extensions))
+      def sql(sql = nil, args = nil, opts = {})
+        opts = { back: self, element_type: :vertex }.merge opts
+        chain_route(opts.merge(sql: sql,
+                               query_args: args,
+                               filter: Pacer::Filter::SqlFilter))
       end
 
       def sql_e(extensions, sql = nil, args)
@@ -249,6 +252,80 @@ module Pacer
           ensure
             @in_pure_transaction = false
           end
+        end
+      end
+
+      def sql_range(k, v, params)
+        params.push v.min
+        params.push v.last
+        if v.exclude_end?
+          "(#{k} <= ? AND ? < #{k})"
+        else
+          "(#{k} <= ? AND ? <= #{k})"
+        end
+      end
+
+      # Only consider a property indexed if it can look up that type
+      def index_properties(orient_type, filters)
+        filters.properties.select do |k, v|
+          if v
+            p = orient_type.property k
+            if p and p.indexed?
+              if v.is_a? Range or v.class.name == 'RangeSet'
+                p.range_index?
+              else
+                true
+              end
+            end
+          end
+        end
+      end
+
+      def build_query(orient_type, filters)
+        indexed = index_properties orient_type, filters
+        if indexed.any?
+          params = []
+          conds = indexed.map do |k, v|
+            if v.is_a? Range
+              sql_range(k, v, params)
+            elsif v.class.name == 'RangeSet'
+              s = v.ranges.map do |r|
+                sql_range(k, r, params)
+              end.join " OR "
+              "(#{s})"
+            elsif v.is_a? Set
+              s = v.map do |x|
+                params.push x
+                "#{k} = ?"
+              end.join " OR "
+              "(#{ s })"
+            else
+              params.push v
+              "#{k} = ?"
+            end
+          end.compact.join(" AND ")
+          ["SELECT FROM #{orient_type.name} WHERE #{conds}", params, indexed]
+        else
+          nil
+        end
+      end
+
+      def indexed_route(element_type, filters, block)
+        filters.graph = self
+        filters.use_lookup!
+        query = build_query(orient_type(nil, element_type), filters)
+        if query
+          route = sql query[0], query[1], element_type: element_type, extensions: filters.extensions, wrapper: filters.wrapper
+          indexed = query.pop
+          filters.remove_property_keys indexed.map { |x| x.first }
+          if filters.any?
+            Pacer::Route.property_filter(route, filters, block)
+          else
+            route
+          end
+        elsif filters.route_modules.any?
+          mod = filters.route_modules.shift
+          Pacer::Route.property_filter(mod.route(self), filters, block)
         end
       end
     end
