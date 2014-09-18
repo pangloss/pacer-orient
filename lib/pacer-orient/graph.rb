@@ -122,29 +122,32 @@ module Pacer
         blueprints_graph.useClassForVertexLabel = b
       end
 
-      def sql(extensions, sql = nil, *args)
+      def sql(extensions, sql = nil, args)
         if extensions.is_a? String
-          args = args.unshift sql if sql
+          args = sql
           sql = extensions
           extensions = []
         end
-        sql_command(sql, *args).iterator.to_route(based_on: self.v(extensions))
+        sql_command(sql, args).iterator.to_route(based_on: self.v(extensions))
       end
 
-      def sql_e(extensions, sql = nil, *args)
+      def sql_e(extensions, sql = nil, args)
         if extensions.is_a? String
-          args = args.unshift sql if sql
+          args = sql
           sql = extensions
           extensions = []
         end
-        sql_command(sql, *args).iterator.to_route(based_on: self.e(extensions))
+        sql_command(sql, args).iterator.to_route(based_on: self.e(extensions))
       end
 
-      def sql_command(sql, *args)
-        args = args.map { |a| encoder.encode_property(a) }
+      def sql_command(sql, args)
+        unless args.frozen?
+          args = args.map { |a| encoder.encode_property(a) }
+        end
         blueprints_graph.command(OCommandSQL.new(sql)).execute(*args)
       end
 
+      # Find or create a vertex or edge class
       def orient_type!(t, element_type = :vertex)
         r = orient_type(t, element_type)
         if r

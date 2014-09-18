@@ -32,6 +32,11 @@ module Pacer::Orient
       end
     end
 
+    def indexed?(name)
+      p = property(name)
+      p.indexed? if p
+    end
+
     def property(name)
       p = raw_property(name)
       Property.new self, p if p
@@ -54,12 +59,16 @@ module Pacer::Orient
     end
 
     def set_super_class(sc)
-      type.setSuperClass graph.orient_type(element_type, sc)
+      graph.send(:in_pure_transaction) do
+        type.setSuperClass graph.orient_type(element_type, sc)
+      end
       self
     end
 
     def drop_property!(name)
-      type.dropProperty name
+      graph.send(:in_pure_transaction) do
+        type.dropProperty name
+      end
     end
 
     def properties
