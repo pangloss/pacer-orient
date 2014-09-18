@@ -40,6 +40,8 @@ module Pacer::Orient
         value.map { |x| encode_property(x) }.to_list
       when JavaSet, JavaMap, JavaList
         value
+      when ArrayJavaProxy
+        value
       else
         Marshal.dump(value).to_java_bytes
       end
