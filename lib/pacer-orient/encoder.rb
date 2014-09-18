@@ -23,6 +23,68 @@ module Pacer::Orient
         end
       when true, false
         value.to_java
+      when JavaDate
+        value
+      when Time
+        value.to_java
+      when DateTime
+        value.to_time.to_java
+      when Date
+        t = value.to_time
+        (t + Time.zone_offset(t.zone)).utc.to_java
+      when Set
+        value.map { |x| encode_property(x) }.to_hashset
+      when Hash
+        value.to_hash_map { |k, v| [encode_property(k), encode_property(v)] }
+      when Enumerable
+        value.map { |x| encode_property(x) }.to_list
+      when JavaSet, JavaMap, JavaList
+        value
+      else
+        Marshal.dump(value).to_java_bytes
+      end
+    end
+
+    def self.decode_property(value)
+      case value
+      when ArrayJavaProxy
+        Marshal.load String.from_java_bytes(value)
+      when JavaDate
+        Time.at(value.getTime() / 1000.0).utc
+      when Time
+        value.utc
+      when JavaSet
+        s = Set[]
+        value.each do |v|
+          s.add decode_property(v)
+        end
+        s
+      when JavaMap
+        h = {}
+        value.each do |k, v|
+          h[decode_property(k)] = decode_property(v)
+        end
+        h
+      when JavaList
+        a = []
+        value.each do |v|
+          a.push decode_property(v)
+        end
+        a
+      else
+        value
+      end
+    end
+  end
+
+
+  # This is an alternate encoder that uses a binary representation of Dates and DateTimes that allows the database to return the correct type and has
+  # much better handling of timezones than the standard approach which turns all dates into basic java.util.Date objects.
+  class BinaryDateEncoder
+    JavaDate = java.util.Date
+
+    def self.encode_property(value)
+      case value
       when DateTime, Time, JavaDate
         f = if value.is_a? JavaDate
               value.getTime / 1000.0
@@ -41,16 +103,8 @@ module Pacer::Orient
         ["D", i, r, c].pack("ANnc").to_java_bytes
       when Date
         ["D", value.to_time.to_i].pack("AN").to_java_bytes
-      when Set
-        value.map { |x| encode_property(x) }.to_hashset
-      when Hash
-        value.to_hash_map { |k, v| [encode_property(k), encode_property(v)] }
-      when Enumerable
-        value.map { |x| encode_property(x) }.to_list
-      when JavaSet, JavaMap, JavaList
-        value
       else
-        Marshal.dump(value).to_java_bytes
+        Encoder.encode_property(value)
       end
     end
 
@@ -81,28 +135,8 @@ module Pacer::Orient
         else
           Marshal.load str
         end
-      when JavaDate
-        Time.at(value.getTime() / 1000.0)
-      when JavaSet
-        s = Set[]
-        value.each do |v|
-          s.add decode_property(v)
-        end
-        s
-      when JavaMap
-        h = {}
-        value.each do |k, v|
-          h[decode_property(k)] = decode_property(v)
-        end
-        h
-      when JavaList
-        a = []
-        value.each do |v|
-          a.push decode_property(v)
-        end
-        a
       else
-        value
+        Encoder.decode_property value
       end
     end
   end
