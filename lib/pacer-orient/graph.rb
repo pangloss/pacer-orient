@@ -50,6 +50,7 @@ module Pacer
         :range_fulltext   => OClass::INDEX_TYPE::FULLTEXT,
         :range_full_text  => OClass::INDEX_TYPE::FULLTEXT,
         :range_notunique  => OClass::INDEX_TYPE::NOTUNIQUE,
+        :range_nonunique  => OClass::INDEX_TYPE::NOTUNIQUE,
         :range_not_unique => OClass::INDEX_TYPE::NOTUNIQUE,
         :range_unique     => OClass::INDEX_TYPE::UNIQUE,
         :proxy            => OClass::INDEX_TYPE::PROXY,
@@ -57,11 +58,24 @@ module Pacer
         :fulltext         => OClass::INDEX_TYPE::FULLTEXT_HASH_INDEX,
         :full_text        => OClass::INDEX_TYPE::FULLTEXT_HASH_INDEX,
         :notunique        => OClass::INDEX_TYPE::NOTUNIQUE_HASH_INDEX,
+        :nonunique        => OClass::INDEX_TYPE::NOTUNIQUE_HASH_INDEX,
         :not_unique       => OClass::INDEX_TYPE::NOTUNIQUE_HASH_INDEX,
         :spatial          => OClass::INDEX_TYPE::SPATIAL,
         :unique           => OClass::INDEX_TYPE::UNIQUE_HASH_INDEX
       }
 
+      ITYPE_REVERSE = {
+        'DICTIONARY'            => { range: true,   unique: false,  type: :range_dictionary } ,
+        'DICTIONARY_HASH_INDEX' => { range: false,  unique: false,  type: :dictionary       } ,
+        'FULLTEXT'              => { range: true,   unique: false,  type: :range_fulltext   } ,
+        'FULLTEXT_HASH_INDEX'   => { range: false,  unique: false,  type: :fulltext         } ,
+        'NOTUNIQUE'             => { range: true,   unique: false,  type: :range_notunique  } ,
+        'NOTUNIQUE_HASH_INDEX'  => { range: false,  unique: false,  type: :notunique        } ,
+        'PROXY'                 => { range: false,  unique: false,  type: :proxy            } ,
+        'SPATIAL'               => { range: false,  unique: false,  type: :spatial          } ,
+        'UNIQUE'                => { range: true,   unique: true,   type: :range_unique     } ,
+        'UNIQUE_HASH_INDEX'     => { range: false,  unique: true,   type: :unique           } ,
+      }
 
       def orient_graph
         blueprints_graph.raw_graph

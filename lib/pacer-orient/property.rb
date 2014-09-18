@@ -42,6 +42,27 @@ module Pacer::Orient
       nil
     end
 
+    def range_index?
+      if i = index
+        t = Graph::ITYPE_REVERSE[i.getType]
+        t[:range] if t
+      end
+    end
+
+    def unique_index?
+      if i = index
+        t = Graph::ITYPE_REVERSE[i.getType]
+        t[:unique] if t
+      end
+    end
+
+    def index_type
+      if i = index
+        Graph::ITYPE_REVERSE[i.getType]
+        t[:type]
+      end
+    end
+
     [ :set_name, :set_not_null, :set_collate,
       :set_mandatory, :set_readonly, :set_min, :set_max,
       :set_regexp, :set_custom, :remove_custom, :clear_custom
