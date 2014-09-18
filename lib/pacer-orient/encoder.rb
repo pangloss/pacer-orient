@@ -48,7 +48,15 @@ module Pacer::Orient
     def self.decode_property(value)
       case value
       when ArrayJavaProxy
-        Marshal.load String.from_java_bytes(value)
+        if value[0] == 4 and value[1] == 8
+          begin
+            Marshal.load String.from_java_bytes(value)
+          rescue TypeError
+            value
+          end
+        else
+          value
+        end
       when JavaDate
         Time.at(value.getTime() / 1000.0).utc
       when Time
@@ -133,7 +141,7 @@ module Pacer::Orient
             Time.at(i).utc.to_date
           end
         else
-          Marshal.load str
+          Encoder.decode_property value
         end
       else
         Encoder.decode_property value
