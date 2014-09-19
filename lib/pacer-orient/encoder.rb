@@ -19,19 +19,19 @@ module Pacer::Orient
         if value.is_a? Bignum
           Marshal.dump(value).to_java_bytes
         else
-          value.to_java
+          value
         end
       when true, false
-        value.to_java
+        value
       when JavaDate
         value
       when Time
-        value.to_java
+        value
       when DateTime
-        value.to_time.to_java
+        value.to_time
       when Date
         t = value.to_time
-        (t + Time.zone_offset(t.zone)).utc.to_java
+        (t + Time.zone_offset(t.zone))
       when Set
         value.map { |x| encode_property(x) }.to_hashset
       when Hash
