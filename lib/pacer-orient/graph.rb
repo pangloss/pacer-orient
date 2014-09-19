@@ -157,11 +157,16 @@ module Pacer
         sql_command(sql, args).iterator.to_route(based_on: self.e(extensions))
       end
 
-      def sql_command(sql, args)
-        unless args.frozen?
+      def sql_command(sql, args = nil)
+        if args and not args.frozen?
           args = args.map { |a| encoder.encode_property(a) }
         end
-        blueprints_graph.command(OCommandSQL.new(sql)).execute(*args)
+        command = blueprints_graph.command(OCommandSQL.new(sql))
+        if args
+          command.execute(*args)
+        else
+          command.execute
+        end
       end
 
       # Find or create a vertex or edge class
@@ -258,11 +263,7 @@ module Pacer
       def sql_range(k, v, params)
         params.push v.min
         params.push v.last
-        if v.exclude_end?
-          "(#{k} <= ? AND ? < #{k})"
-        else
-          "(#{k} <= ? AND ? <= #{k})"
-        end
+        "#{k} BETWEEN ? and ?"
       end
 
       # Only consider a property indexed if it can look up that type
@@ -276,6 +277,8 @@ module Pacer
               else
                 true
               end
+            elsif v.is_a? Range
+              true
             end
           end
         end
@@ -294,11 +297,8 @@ module Pacer
               end.join " OR "
               "(#{s})"
             elsif v.is_a? Set
-              s = v.map do |x|
-                params.push x
-                "#{k} = ?"
-              end.join " OR "
-              "(#{ s })"
+              params.push v.to_a
+              "#{k} IN ?"
             else
               params.push v
               "#{k} = ?"

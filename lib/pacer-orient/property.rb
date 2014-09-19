@@ -58,8 +58,8 @@ module Pacer::Orient
 
     def index_type
       if i = index
-        Graph::ITYPE_REVERSE[i.getType]
-        t[:type]
+        t = Graph::ITYPE_REVERSE[i.getType]
+        t[:type] if t
       end
     end
 

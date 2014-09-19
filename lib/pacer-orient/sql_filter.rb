@@ -48,7 +48,7 @@ module Pacer
       end
 
       def inspect_string
-        "SQL #{ query }  #{query_args}"
+        "SQL '#{query}' #{query_args}"
       end
     end
   end
