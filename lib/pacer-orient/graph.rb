@@ -311,21 +311,25 @@ module Pacer
       end
 
       def indexed_route(element_type, filters, block)
-        filters.graph = self
-        filters.use_lookup!
-        query = build_query(orient_type(nil, element_type), filters)
-        if query
-          route = sql query[0], query[1], element_type: element_type, extensions: filters.extensions, wrapper: filters.wrapper
-          indexed = query.pop
-          filters.remove_property_keys indexed.map { |x| x.first }
-          if filters.any?
-            Pacer::Route.property_filter(route, filters, block)
-          else
-            route
+        if search_manual_indices
+          super
+        else
+          filters.graph = self
+          filters.use_lookup!
+          query = build_query(orient_type(nil, element_type), filters)
+          if query
+            route = sql query[0], query[1], element_type: element_type, extensions: filters.extensions, wrapper: filters.wrapper
+            indexed = query.pop
+            filters.remove_property_keys indexed.map { |x| x.first }
+            if filters.any?
+              Pacer::Route.property_filter(route, filters, block)
+            else
+              route
+            end
+          elsif filters.route_modules.any?
+            mod = filters.route_modules.shift
+            Pacer::Route.property_filter(mod.route(self), filters, block)
           end
-        elsif filters.route_modules.any?
-          mod = filters.route_modules.shift
-          Pacer::Route.property_filter(mod.route(self), filters, block)
         end
       end
     end
