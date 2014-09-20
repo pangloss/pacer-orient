@@ -25,8 +25,10 @@ module Pacer
         if factory
           factory
         else
-          username = args[:username]
-          password = args[:password]
+          if args
+            username = args[:username]
+            password = args[:password]
+          end
           factory =
             if username
               com.tinkerpop.blueprints.impls.orient.OrientGraphFactory.new url, username, password

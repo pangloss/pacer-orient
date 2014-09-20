@@ -17,6 +17,7 @@ module Pacer
       # Marked the types that should be most commonly used.
       OTYPES = {
         :any          => OType::ANY,
+        :all          => OType::ANY,
         :boolean      => OType::BOOLEAN,      # use this one
         :bool         => OType::BOOLEAN,
         :short        => OType::SHORT,
@@ -26,10 +27,7 @@ module Pacer
         :float        => OType::FLOAT,
         :double       => OType::DOUBLE,       # use this one
         :decimal      => OType::DECIMAL,      # use this one
-       #If encoding dates to binary
-       #:date         => OType::BINARY,
-       #:datetime     => OType::BINARY,
-       #:date_time    => OType::BINARY,
+        #HINT: If using the BinaryDateEncoder, use :binary instead of the :date or :datetime types.
         :date         => OType::DATE,         # use this one
         :datetime     => OType::DATETIME,     # use this one
         :date_time    => OType::DATETIME,
@@ -231,9 +229,10 @@ module Pacer
         end
       end
 
-      def create_key_index(name, element_type = :vertex, itype = :non_unique)
-        type = orient_type(nil, element_type)
-        type.property!(name).create_index!(itype) if type
+      def create_key_index(name, element_type = :vertex, opts = {})
+        in_pure_transaction do
+          super
+        end
       end
 
       def drop_key_index(name, element_type = :vertex)
@@ -271,9 +270,10 @@ module Pacer
         filters.properties.select do |k, v|
           if v
             p = orient_type.property k
-            if p and p.indexed?
+            if (p and p.indexed?) or key_indices.include?(k)
               if v.is_a? Range or v.class.name == 'RangeSet'
-                p.range_index?
+                # not p just means it is a key index
+                not p or p.range_index?
               else
                 true
               end
