@@ -61,10 +61,11 @@ module Pacer::Orient
     private
 
     def configure(graph)
-      graph.useLightweightEdges = lightweight_edges if lightweight_edges == false
-      graph.useClassForEdgeLabel = edge_classes if edge_classes == false
-      graph.useClassForVertexLabel = vertex_classes if vertex_classes == false
-      #graph.setAutoStartTx false
+      graph.setUseLightweightEdges lightweight_edges if lightweight_edges == false
+      graph.setUseClassForEdgeLabel edge_classes if edge_classes == false
+      graph.setUseClassForVertexLabel vertex_classes if vertex_classes == false
+      graph.setAutoStartTx false
+      graph.setRequireTransaction true
       graph
     end
   end

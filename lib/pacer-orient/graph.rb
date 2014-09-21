@@ -249,10 +249,8 @@ module Pacer
         else
           begin
             @in_pure_transaction = true
-            transaction do
-              orient_graph.rollback
-              yield
-            end
+            orient_graph.rollback
+            yield
           ensure
             @in_pure_transaction = false
           end
