@@ -1,7 +1,26 @@
 module Pacer
   module Filter
     module SqlFilter
-      attr_accessor :sql, :select, :orient_type, :where, :query_args, :order_by, :limit, :offset, :timeout, :parallel
+      attr_accessor :sql, :select, :orient_type, :where, :query_args, :order_by, :timeout, :parallel
+      attr_writer :limit, :offset
+
+      def offset(n = nil)
+        if n
+          @offset = n
+          self
+        else
+          @offset
+        end
+      end
+
+      def limit(n = nil)
+        if n
+          @limit = n
+          self
+        else
+          @limit
+        end
+      end
 
       protected
 
