@@ -13,6 +13,7 @@ module Pacer
       import com.orientechnologies.orient.core.sql.OCommandSQL
       import com.orientechnologies.orient.core.metadata.schema.OType
       import com.orientechnologies.orient.core.metadata.schema.OClass
+      import com.orientechnologies.orient.core.db.ODatabaseRecordThreadLocal
 
       # Marked the types that should be most commonly used.
       OTYPES = {
@@ -81,15 +82,16 @@ module Pacer
       }
 
       def orient_graph
-        blueprints_graph.raw_graph
+        blueprints_graph.getRawGraph
       end
 
       def allow_auto_tx=(b)
+        blueprints_graph.setRequireTransaction !b
         blueprints_graph.setAutoStartTx b
       end
 
       def allow_auto_tx
-        blueprints_graph.autoStartTx
+        blueprints_graph.isAutoStartTx or not blueprints_graph.isRequireTransaction
       end
 
       def on_commit(&block)
@@ -241,18 +243,47 @@ module Pacer
         end
       end
 
+      def in_transaction?
+        orient_graph.getTransaction.isActive
+      end
+
+      # Enables using multiple graphs at once.
+      def thread_local
+        orig = ODatabaseRecordThreadLocal.INSTANCE.getIfDefined
+        if orig == orient_graph
+          yield
+        else
+          begin
+            ODatabaseRecordThreadLocal.INSTANCE.set orient_graph
+            yield
+          ensure
+            ODatabaseRecordThreadLocal.INSTANCE.set orig
+          end
+        end
+      end
+
+      def transaction(opts = {})
+        thread_local do
+          super
+        end
+      end
+
+      alias tx transaction
+
       private
 
       def in_pure_transaction
         if @in_pure_transaction
           yield
         else
+          in_tx = in_transaction?
           begin
             @in_pure_transaction = true
-            orient_graph.rollback
+            orient_graph.commit if in_tx
             yield
           ensure
             @in_pure_transaction = false
+            orient_graph.begin if in_tx
           end
         end
       end
@@ -329,6 +360,35 @@ module Pacer
             Pacer::Route.property_filter(mod.route(self), filters, block)
           end
         end
+      end
+
+      def finish_transaction!
+      end
+
+      def start_transaction!(opts)
+        if allow_auto_tx
+          base_tx_finalizers
+        elsif in_transaction?
+          nested_tx_finalizers
+        else
+          blueprints_graph.begin
+          base_tx_finalizers
+        end
+      end
+
+      def base_tx_finalizers
+        commit = ->(reopen = true) do
+          puts "transaction committed" if Pacer.verbose == :very
+          blueprints_graph.commit
+          blueprints_graph.begin if reopen
+          on_commit_block.call if on_commit_block
+        end
+        rollback = ->(message = nil) do
+          puts ["transaction rolled back", message].compact.join(': ') if Pacer.verbose == :very
+          blueprints_graph.rollback
+          blueprints_graph.begin unless $!
+        end
+        [commit, rollback]
       end
     end
   end
