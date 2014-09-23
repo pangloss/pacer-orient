@@ -33,7 +33,15 @@ module Pacer::Orient
     end
 
     def graph
-      Graph.new encoder, proc { get }
+      # Shutdown releases the graph to the pool in this case.
+      g = Graph.new encoder, proc { get }, proc { |g| g.blueprints_graph.shutdown }
+      if block_given?
+        r = yield g
+        g.shutdown
+        r
+      else
+        g
+      end
     end
 
     def get
