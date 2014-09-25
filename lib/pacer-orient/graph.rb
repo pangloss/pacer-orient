@@ -175,14 +175,12 @@ module Pacer
         if r
           r
         else
-          in_pure_transaction do
-            t = if element_type == :vertex
-                  blueprints_graph.createVertexType(t.to_s)
-                elsif element_type == :edge
-                  blueprints_graph.createEdgeType(t.to_s)
-                end
-            OrientType.new self, element_type, t if t
-          end
+          t = if element_type == :vertex
+                blueprints_graph.createVertexType(t.to_s)
+              elsif element_type == :edge
+                blueprints_graph.createEdgeType(t.to_s)
+              end
+          OrientType.new self, element_type, t if t
         end
       end
 
@@ -218,28 +216,14 @@ module Pacer
       end
 
       def add_vertex_types(*types)
-        in_pure_transaction do
-          types.map do |t|
-            existing = orient_type(t, :vertex)
-            if existing
-              existing
-            else
-              t = blueprints_graph.createVertexType(t.to_s)
-              OrientType.new(self, :vertex, t) if t
-            end
+        types.map do |t|
+          existing = orient_type(t, :vertex)
+          if existing
+            existing
+          else
+            t = blueprints_graph.createVertexType(t.to_s)
+            OrientType.new(self, :vertex, t) if t
           end
-        end
-      end
-
-      def create_key_index(name, element_type = :vertex, opts = {})
-        in_pure_transaction do
-          super
-        end
-      end
-
-      def drop_key_index(name, element_type = :vertex)
-        in_pure_transaction do
-          super
         end
       end
 
@@ -248,7 +232,7 @@ module Pacer
       end
 
       # Enables using multiple graphs at once.
-      def thread_local
+      def thread_local(revert = false)
         orig = ODatabaseRecordThreadLocal.INSTANCE.getIfDefined
         if orig == orient_graph
           yield
@@ -257,36 +241,33 @@ module Pacer
             ODatabaseRecordThreadLocal.INSTANCE.set orient_graph
             yield
           ensure
-            ODatabaseRecordThreadLocal.INSTANCE.set orig
+            ODatabaseRecordThreadLocal.INSTANCE.set orig if revert
           end
         end
       end
 
       def transaction(opts = {})
         thread_local do
-          super
+          if opts[:schema]
+            begin
+              if in_transaction?
+                in_tx = true
+                blueprints_graph.commit
+              end
+              c, r = nested_tx_finalizers
+              yield c, r
+            ensure
+              blueprints_graph.begin if in_tx
+            end
+          else
+            super
+          end
         end
       end
 
       alias tx transaction
 
       private
-
-      def in_pure_transaction
-        if @in_pure_transaction
-          yield
-        else
-          in_tx = in_transaction?
-          begin
-            @in_pure_transaction = true
-            orient_graph.commit if in_tx
-            yield
-          ensure
-            @in_pure_transaction = false
-            orient_graph.begin if in_tx
-          end
-        end
-      end
 
       def sql_range(k, v, params)
         params.push v.min

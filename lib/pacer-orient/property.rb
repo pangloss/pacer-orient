@@ -20,9 +20,7 @@ module Pacer::Orient
 
     def create_index!(index_type = :not_unique)
       unless indexed?
-        graph.send(:in_pure_transaction) do
-          property.createIndex graph.index_type(index_type)
-        end
+        property.createIndex graph.index_type(index_type)
       end
       self
     end

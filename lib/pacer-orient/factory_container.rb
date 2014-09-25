@@ -47,6 +47,10 @@ module Pacer::Orient
       end
     end
 
+    def surrender(g)
+      g.shutdown if use_pool
+    end
+
     def get
       if transactional == false
         getNoTx
