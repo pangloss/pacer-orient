@@ -6,4 +6,8 @@ class Java::ComOrientechnologiesOrientCoreId::ORecordId
   def to_s
     toString[1..-1]
   end
+
+  def as_json(opts = nil)
+    to_s
+  end
 end
