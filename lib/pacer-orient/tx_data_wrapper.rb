@@ -1,6 +1,8 @@
 module Pacer
   module Orient
     class TxDataWrapper
+      import com.orientechnologies.orient.core.db.record.ORecordOperation
+
       attr_reader :tx, :entries, :v_base, :e_base, :graph, :blueprints_graph
 
       def initialize(odb, graph)
