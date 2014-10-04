@@ -1,6 +1,6 @@
 module Pacer::Orient
   class FactoryContainer
-    attr_reader :factory, :url
+    attr_reader :factory, :url, :use_pool
     attr_accessor :encoder, :transactional, :lightweight_edges, :edge_classes, :vertex_classes
 
     def initialize(f, url, args)
@@ -16,11 +16,14 @@ module Pacer::Orient
         @encoder = args.fetch :encoder, Encoder
         min = args[:pool_min]
         max = args[:pool_max]
-        setupPool min, max if min and max
+        if min and max
+          setupPool min, max
+        end
       end
     end
 
     def setupPool(min, max)
+      @use_pool = true
       factory.setupPool min, max
     end
 
@@ -33,7 +36,19 @@ module Pacer::Orient
     end
 
     def graph
-      Graph.new encoder, proc { get }
+      # Shutdown releases the graph to the pool in this case.
+      g = Graph.new encoder, proc { get }, proc { |g| g.blueprints_graph.shutdown }
+      if block_given?
+        r = yield g
+        g.shutdown if use_pool
+        r
+      else
+        g
+      end
+    end
+
+    def surrender(g)
+      g.shutdown if use_pool
     end
 
     def get
@@ -60,12 +75,14 @@ module Pacer::Orient
 
     private
 
-    def configure(graph)
-      graph.useLightweightEdges = lightweight_edges if lightweight_edges == false
-      graph.useClassForEdgeLabel = edge_classes if edge_classes == false
-      graph.useClassForVertexLabel = vertex_classes if vertex_classes == false
-      #graph.setAutoStartTx false
-      graph
+    def configure(bg)
+      bg.setAutoStartTx false
+      bg.setRequireTransaction true
+      bg.rollback # a transaction is auto-started when the graph is opened.
+      bg.setUseLightweightEdges lightweight_edges if lightweight_edges == false
+      bg.setUseClassForEdgeLabel edge_classes if edge_classes == false
+      bg.setUseClassForVertexLabel vertex_classes if vertex_classes == false
+      bg
     end
   end
 end

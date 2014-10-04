@@ -45,9 +45,7 @@ module Pacer::Orient
     def property!(name, otype)
       p = raw_property(name)
       unless p
-        p = graph.send(:in_pure_transaction) do
-          type.createProperty(name.to_s, graph.property_type(otype))
-        end
+        p = type.createProperty(name.to_s, graph.property_type(otype))
       end
       Property.new self, p
     end
@@ -59,16 +57,12 @@ module Pacer::Orient
     end
 
     def set_super_class(sc)
-      graph.send(:in_pure_transaction) do
-        type.setSuperClass graph.orient_type(element_type, sc)
-      end
+      type.setSuperClass graph.orient_type(element_type, sc)
       self
     end
 
     def drop_property!(name)
-      graph.send(:in_pure_transaction) do
-        type.dropProperty name
-      end
+      type.dropProperty name
     end
 
     def properties

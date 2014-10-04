@@ -13,6 +13,7 @@ module Pacer
       import com.orientechnologies.orient.core.sql.OCommandSQL
       import com.orientechnologies.orient.core.metadata.schema.OType
       import com.orientechnologies.orient.core.metadata.schema.OClass
+      import com.orientechnologies.orient.core.db.ODatabaseRecordThreadLocal
 
       # Marked the types that should be most commonly used.
       OTYPES = {
@@ -81,15 +82,16 @@ module Pacer
       }
 
       def orient_graph
-        blueprints_graph.raw_graph
+        blueprints_graph.getRawGraph
       end
 
       def allow_auto_tx=(b)
+        blueprints_graph.setRequireTransaction !b
         blueprints_graph.setAutoStartTx b
       end
 
       def allow_auto_tx
-        blueprints_graph.autoStartTx
+        blueprints_graph.isAutoStartTx or not blueprints_graph.isRequireTransaction
       end
 
       def on_commit(&block)
@@ -173,14 +175,12 @@ module Pacer
         if r
           r
         else
-          in_pure_transaction do
-            t = if element_type == :vertex
-                  blueprints_graph.createVertexType(t.to_s)
-                elsif element_type == :edge
-                  blueprints_graph.createEdgeType(t.to_s)
-                end
-            OrientType.new self, element_type, t if t
-          end
+          t = if element_type == :vertex
+                blueprints_graph.createVertexType(t.to_s)
+              elsif element_type == :edge
+                blueprints_graph.createEdgeType(t.to_s)
+              end
+          OrientType.new self, element_type, t if t
         end
       end
 
@@ -216,46 +216,58 @@ module Pacer
       end
 
       def add_vertex_types(*types)
-        in_pure_transaction do
-          types.map do |t|
-            existing = orient_type(t, :vertex)
-            if existing
-              existing
-            else
-              t = blueprints_graph.createVertexType(t.to_s)
-              OrientType.new(self, :vertex, t) if t
-            end
+        types.map do |t|
+          existing = orient_type(t, :vertex)
+          if existing
+            existing
+          else
+            t = blueprints_graph.createVertexType(t.to_s)
+            OrientType.new(self, :vertex, t) if t
           end
         end
       end
 
-      def create_key_index(name, element_type = :vertex, opts = {})
-        in_pure_transaction do
-          super
-        end
+      def in_transaction?
+        orient_graph.getTransaction.isActive
       end
 
-      def drop_key_index(name, element_type = :vertex)
-        in_pure_transaction do
-          super
-        end
-      end
-
-      private
-
-      def in_pure_transaction
-        if @in_pure_transaction
+      # Enables using multiple graphs at once.
+      def thread_local(revert = false)
+        orig = ODatabaseRecordThreadLocal.INSTANCE.getIfDefined
+        if orig == orient_graph
           yield
         else
           begin
-            @in_pure_transaction = true
-            orient_graph.rollback
+            ODatabaseRecordThreadLocal.INSTANCE.set orient_graph
             yield
           ensure
-            @in_pure_transaction = false
+            ODatabaseRecordThreadLocal.INSTANCE.set orig if revert
           end
         end
       end
+
+      def transaction(opts = {})
+        thread_local do
+          if opts[:schema]
+            begin
+              if in_transaction?
+                in_tx = true
+                blueprints_graph.commit
+              end
+              c, r = nested_tx_finalizers
+              yield c, r
+            ensure
+              blueprints_graph.begin if in_tx
+            end
+          else
+            super
+          end
+        end
+      end
+
+      alias tx transaction
+
+      private
 
       def sql_range(k, v, params)
         params.push v.min
@@ -329,6 +341,35 @@ module Pacer
             Pacer::Route.property_filter(mod.route(self), filters, block)
           end
         end
+      end
+
+      def finish_transaction!
+      end
+
+      def start_transaction!(opts)
+        if allow_auto_tx
+          base_tx_finalizers
+        elsif in_transaction?
+          nested_tx_finalizers
+        else
+          blueprints_graph.begin
+          base_tx_finalizers
+        end
+      end
+
+      def base_tx_finalizers
+        commit = ->(reopen = true) do
+          puts "transaction committed" if Pacer.verbose == :very
+          blueprints_graph.commit
+          blueprints_graph.begin if reopen
+          on_commit_block.call if on_commit_block
+        end
+        rollback = ->(message = nil) do
+          puts ["transaction rolled back", message].compact.join(': ') if Pacer.verbose == :very
+          blueprints_graph.rollback
+          blueprints_graph.begin unless $!
+        end
+        [commit, rollback]
       end
     end
   end
