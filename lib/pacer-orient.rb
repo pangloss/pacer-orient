@@ -8,6 +8,7 @@ require 'pacer-orient/version'
 require Pacer::Orient::JAR
 
 require 'pacer-orient/graph'
+require 'pacer-orient/tx_data_wrapper'
 
 Pacer::FunctionResolver.clear_cache
 
