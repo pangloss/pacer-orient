@@ -2,8 +2,6 @@ module Pacer
   module Orient
     class TxDataWrapper
       import com.orientechnologies.orient.core.db.record.ORecordOperation
-      import com.tinkerpop.blueprints.impls.orient.OrientVertex
-      import com.tinkerpop.blueprints.impls.orient.OrientEdge
 
       attr_reader :db, :v_base, :e_base, :graph, :blueprints_graph
 
@@ -92,11 +90,11 @@ module Pacer
       end
 
       def wrap_edge(e)
-        Pacer::Wrappers::EdgeWrapper.new graph, OrientEdge.new(blueprints_graph, e)
+        Pacer::Wrappers::EdgeWrapper.new graph, blueprints_graph.getEdge(e)
       end
 
       def wrap_vertex(e)
-        Pacer::Wrappers::VertexWrapper.new graph, OrientVertex.new(blueprints_graph, e)
+        Pacer::Wrappers::VertexWrapper.new graph, blueprints_graph.getVertex(e)
       end
     end
   end
