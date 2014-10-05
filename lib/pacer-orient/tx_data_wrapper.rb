@@ -2,14 +2,15 @@ module Pacer
   module Orient
     class TxDataWrapper
       import com.orientechnologies.orient.core.db.record.ORecordOperation
+      import com.tinkerpop.blueprints.impls.orient.OrientVertex
+      import com.tinkerpop.blueprints.impls.orient.OrientEdge
 
-      attr_reader :tx, :entries, :v_base, :e_base, :graph, :blueprints_graph
+      attr_reader :db, :v_base, :e_base, :graph, :blueprints_graph
 
-      def initialize(odb, graph)
+      def initialize(db, graph)
+        @db = db
         @graph = graph
         @blueprints_graph = graph.blueprints_graph
-        @tx = odb.getTransaction
-        @entries = tx.getAllRecordEntries
         @v_base = graph.orient_graph.getMetadata.getSchema.getClass("V")
         @e_base = graph.orient_graph.getMetadata.getSchema.getClass("E")
       end
@@ -55,8 +56,12 @@ module Pacer
       end
 
       def deleted?(e)
-        entry = tx.getRecordEntry e.element_id
+        entry = db.getTransaction.getRecordEntry e.element_id
         entry and entry.type == ORecordOperation::DELETED
+      end
+
+      def entries
+        db.getTransaction.getCurrentRecordEntries
       end
 
       private
@@ -68,8 +73,9 @@ module Pacer
       # !!!!!!!!!!!!!!!!!!!!
 
       def keep(op, klass)
+        return unless entries
         entries.map do |e|
-          if e.type == op and e.getSchemaClass.isSubClassOf(klass)
+          if e.type == op and e.getRecord.getSchemaClass.isSubClassOf(klass)
             yield e.getRecord
           end
         end.compact
@@ -86,7 +92,7 @@ module Pacer
       end
 
       def wrap_edge(e)
-        Pacer::Wrappers::VertexWrapper.new graph, OrientVertex.new(blueprints_graph, e)
+        Pacer::Wrappers::EdgeWrapper.new graph, OrientEdge.new(blueprints_graph, e)
       end
 
       def wrap_vertex(e)
