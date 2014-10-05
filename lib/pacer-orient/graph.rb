@@ -122,7 +122,7 @@ module Pacer
       alias lightweight_edges? lightweight_edges
 
       def lightweight_edges=(b)
-        blueprints_graph.useLightweightEdges = b
+        blueprints_graph.setUseLightweightEdges b
       end
 
       def use_class_for_edge_label
@@ -130,7 +130,7 @@ module Pacer
       end
 
       def use_class_for_edge_label=(b)
-        blueprints_graph.useClassForEdgeLabel = b
+        blueprints_graph.setUseClassForEdgeLabel b
       end
 
       def use_class_for_vertex_label
@@ -138,7 +138,7 @@ module Pacer
       end
 
       def use_class_for_vertex_label=(b)
-        blueprints_graph.useClassForVertexLabel = b
+        blueprints_graph.setUseClassForVertexLabel b
       end
 
       def sql(sql = nil, args = nil, opts = {})
