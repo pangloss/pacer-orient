@@ -7,8 +7,8 @@
     <artifactId>pacer-orient</artifactId>
     <!-- NOTE: the following properties are automatically updated based on the values in lib/pacer-orient/version.rb -->
     <properties>
-      <orient.version>2.0-M2-SNAPSHOT</orient.version>
-      <gem.version>2.2.1.pre</gem.version>
+      <orient.version>2.0-M2</orient.version>
+      <gem.version>2.2.2.pre</gem.version>
       <pipes.version>2.6.0</pipes.version>
     </properties>
     <!-- NOTE: the following properties are automatically updated based on the values in lib/pacer-orient/version.rb -->
@@ -27,11 +27,6 @@
         </developer>
     </developers>
     <dependencies>
-      <dependency>
-        <groupId>com.orientechnologies</groupId>
-        <artifactId>orient-commons</artifactId>
-        <version>${orient.version}</version>
-      </dependency>
       <dependency>
         <groupId>com.orientechnologies</groupId>
         <artifactId>orientdb-core</artifactId>
