@@ -13,10 +13,11 @@ Gem::Specification.new do |s|
   s.description = s.summary
 
   s.add_dependency 'pacer', Pacer::Orient::PACER_REQ
+  s.add_dependency "lock_jar", "~> 0.10.0"
 
   s.rubyforge_project = "pacer-orient"
 
-  s.files         = `git ls-files`.split("\n") + [Pacer::Orient::JAR_PATH]
+  s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.require_paths = ["lib"]
 end
