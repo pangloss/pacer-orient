@@ -6,6 +6,8 @@ require 'pacer-orient/encoder'
 require 'pacer-orient/record_id'
 require 'pacer-orient/factory_container'
 require 'pacer-orient/sql_filter'
+require 'pacer-orient/db_listener'
+require 'pacer-orient/tx_data_wrapper'
 
 module Pacer
   module Orient
@@ -96,7 +98,7 @@ module Pacer
 
       def on_commit(&block)
         return unless block
-        # todo
+        orient_graph.registerListener(DbCommitListener.new(self, block))
       end
 
       def on_commit_failed(&block)

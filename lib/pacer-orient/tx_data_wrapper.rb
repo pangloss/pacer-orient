@@ -1,5 +1,20 @@
 module Pacer
   module Orient
+    class CachedTxDataWrapper
+      attr_reader :created_v, :deleted_v, :changed_v, :created_e, :deleted_e, :changed_e, :entries
+
+      def initialize(db, graph)
+        w = TxDataWrapper.new(db, graph)
+        @created_v = w.created_v
+        @deleted_v = w.deleted_v
+        @changed_v = w.changed_v
+        @created_e = w.created_e
+        @deleted_e = w.deleted_e
+        @changed_e = w.changed_e
+        @entries = w.entries
+      end
+    end
+
     class TxDataWrapper
       import com.orientechnologies.orient.core.db.record.ORecordOperation
 
@@ -73,8 +88,17 @@ module Pacer
       def keep(op, klass)
         return unless entries
         entries.map do |e|
-          if e.type == op and e.getRecord.getSchemaClass.isSubClassOf(klass)
-            yield e.getRecord
+          if e.type == op
+            sc = e.getRecord.getSchemaClass
+            if sc
+              if sc.isSubClassOf(klass)
+                yield e.getRecord
+              end
+            else
+              if klass == v_base
+                yield e.getRecord
+              end
+            end
           end
         end.compact
       end
