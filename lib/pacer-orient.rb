@@ -11,6 +11,9 @@ require 'lock_jar'
 LockJar.lock(File.join(File.dirname(__FILE__), "..", "Jarfile"))
 LockJar.load
 
+# Orient will kill you at the drop of a hat if you don't do this!
+com.orientechnologies.orient.core.Orient.instance.removeShutdownHook
+
 require 'pacer-orient/graph'
 require 'pacer-orient/tx_data_wrapper'
 
