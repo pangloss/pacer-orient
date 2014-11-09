@@ -1,5 +1,7 @@
 require 'pacer' unless defined? Pacer
 
+java.lang.System.setProperty("java.awt.headless", "true") unless ENV['PACER_ORIENT_HEAD']
+
 lib_path = File.expand_path(File.join(File.dirname(__FILE__), '../lib'))
 $:.unshift lib_path unless $:.any? { |path| path == lib_path }
 
