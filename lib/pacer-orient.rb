@@ -1,4 +1,4 @@
-require 'pacer' unless defined? Pacer
+require 'pacer'
 
 java.lang.System.setProperty("java.awt.headless", "true") unless ENV['PACER_ORIENT_HEAD']
 
@@ -6,6 +6,8 @@ lib_path = File.expand_path(File.join(File.dirname(__FILE__), '../lib'))
 $:.unshift lib_path unless $:.any? { |path| path == lib_path }
 
 require 'pacer-orient/version'
+LockJar.lock File.join(File.dirname(__FILE__), '../Jarfile'), lockfile: 'Jarfile.pacer-orient.lock'
+LockJar.load 'Jarfile.pacer-orient.lock'
 
 # Orient will kill you at the drop of a hat if you don't do this!
 com.orientechnologies.orient.core.Orient.instance.removeShutdownHook
