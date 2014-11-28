@@ -91,6 +91,8 @@ module Pacer
         puts "Exception: #{ e.message }"
         pp e.backtrace
         nil
+      ensure
+        self.data = nil
       end
     end
   end
