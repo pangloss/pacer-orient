@@ -61,17 +61,7 @@ module Pacer
       end
 
       def onBeforeTxCommit(db)
-        self.data = d = CachedTxDataWrapper.new db, graph
-        #on_commit.call d
-        pp transaction: { getAllRecordEntries: d.entries,
-                          length: d.entries.length,
-                          contents: d.entries.to_a }
-        pp created_v: d.created_v
-        pp created_e: d.created_e
-        pp changed_v: d.changed_v
-        pp changed_e: d.changed_e
-        pp deleted_v: d.deleted_v
-        pp deleted_e: d.deleted_e
+        self.data = CachedTxDataWrapper.new db, graph
       rescue Exception => e
         puts "Exception: #{ e.message }"
         pp e.backtrace
@@ -79,14 +69,7 @@ module Pacer
       end
 
       def onAfterTxCommit(db)
-        puts "-----------------------------------------------------------"
-        d = self.data
-        pp created_v: d.created_v
-        pp created_e: d.created_e
-        pp changed_v: d.changed_v
-        pp changed_e: d.changed_e
-        pp deleted_v: d.deleted_v
-        pp deleted_e: d.deleted_e
+        on_commit.call self.data
       rescue Exception => e
         puts "Exception: #{ e.message }"
         pp e.backtrace
