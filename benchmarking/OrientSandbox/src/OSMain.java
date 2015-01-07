@@ -6,8 +6,10 @@ public class OSMain {
         OrientBenchmarkingTests obt = new OrientBenchmarkingTests(baseOrient);
 
         //obt.testLuceneFulltext();
-        obt.testUnique();
-
+        //obt.testUnique();
+        //obt.testNotUnique();
+        //obt.testDictionary();
+        obt.testFulltext();
     }
 
 }

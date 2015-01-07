@@ -23,7 +23,7 @@ public class OrientBenchmarkingTests {
 
         // SBTREE
         System.out.println("SBTREE");
-        os.connect(baseOrient + "FulltextTestDB");
+        os.connect(baseOrient + "SBTreeLuceneFulltextTestDB");
 
         os.createTestVertexType();
         os.createFulltextIndex("SBTREE");
@@ -32,7 +32,7 @@ public class OrientBenchmarkingTests {
 
         // NO INDEX
         System.out.println("NO INDEX");
-        os.connect(baseOrient + "NoIndexFulltextTestDB");
+        os.connect(baseOrient + "NoIndexLuceneFulltextTestDB");
 
         os.createTestVertexType();
         os.insertFulltextTest(500000);
@@ -66,4 +66,90 @@ public class OrientBenchmarkingTests {
         os.insertTest(500000);
         os.shutdown();
     }
+
+    public void testNotUnique() {
+        // SBTREE
+        System.out.println("SBTREE");
+        os.connect(baseOrient + "SBTreeNotUniqueTestDB");
+
+        os.createTestVertexType();
+        os.createIndex(OClass.INDEX_TYPE.NOTUNIQUE);
+        os.insertTest(500000);
+        os.shutdown();
+
+        // HASHINDEX
+        System.out.println("HASHINDEX");
+        os.connect(baseOrient + "HashNotUniqueTestDB");
+
+        os.createTestVertexType();
+        os.createIndex(OClass.INDEX_TYPE.NOTUNIQUE_HASH_INDEX);
+        os.insertTest(500000);
+        os.shutdown();
+
+        // NO INDEX
+        System.out.println("NO INDEX");
+        os.connect(baseOrient + "NoIndexNotUniqueTestDB");
+
+        os.createTestVertexType();
+        os.insertTest(500000);
+        os.shutdown();
+    }
+
+    // NOTE: This test shows that DICTIONARY is only available as a manual index for now.
+    public void testDictionary() {
+        // SBTREE
+        System.out.println("SBTREE");
+        os.connect(baseOrient + "SBTreeDictTestDB");
+
+        os.createTestVertexType();
+        os.createIndex(OClass.INDEX_TYPE.DICTIONARY);
+        os.insertTest(500000);
+        os.shutdown();
+
+        // HASHINDEX
+        System.out.println("HASHINDEX");
+        os.connect(baseOrient + "HashDictTestDB");
+
+        os.createTestVertexType();
+        os.createIndex(OClass.INDEX_TYPE.DICTIONARY_HASH_INDEX);
+        os.insertTest(500000);
+        os.shutdown();
+
+        // NO INDEX
+        System.out.println("NO INDEX");
+        os.connect(baseOrient + "NoIndexDictTestDB");
+
+        os.createTestVertexType();
+        os.insertTest(500000);
+        os.shutdown();
+    }
+
+    public void testFulltext() {
+        // SBTREE
+        System.out.println("SBTREE");
+        os.connect(baseOrient + "SBTreeFulltextTestDB");
+
+        os.createTestVertexType();
+        os.createIndex(OClass.INDEX_TYPE.FULLTEXT);
+        os.insertFulltextTest(500000);
+        os.shutdown();
+
+        // HASHINDEX
+        System.out.println("HASHINDEX");
+        os.connect(baseOrient + "HashFulltextTestDB");
+
+        os.createTestVertexType();
+        os.createIndex(OClass.INDEX_TYPE.FULLTEXT_HASH_INDEX);
+        os.insertFulltextTest(500000);
+        os.shutdown();
+
+        // NO INDEX
+        System.out.println("NO INDEX");
+        os.connect(baseOrient + "NoIndexFulltextTestDB");
+
+        os.createTestVertexType();
+        os.insertFulltextTest(500000);
+        os.shutdown();
+    }
+
 }
