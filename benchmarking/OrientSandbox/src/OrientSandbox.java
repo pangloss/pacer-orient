@@ -2,6 +2,7 @@ import java.util.Iterator;
 import java.util.Random;
 
 import com.orientechnologies.common.util.OCallable;
+import com.orientechnologies.orient.core.intent.OIntentMassiveInsert;
 import com.orientechnologies.orient.core.metadata.schema.OClass;
 import com.orientechnologies.orient.core.metadata.schema.OSchema;
 import com.orientechnologies.orient.core.metadata.schema.OType;
@@ -22,6 +23,14 @@ public class OrientSandbox {
         this.tGraph = graph;
     }
 
+    private void setMassiveInsertIntent() {
+        this.graph.declareIntent(new OIntentMassiveInsert());
+    }
+    
+    private void clearIntent() {
+        this.graph.declareIntent(null);
+    }
+    
     public void findNodeOrient() {
         long start = System.currentTimeMillis();
         Iterator<Vertex> vs = this.graph.getVertices("V.name", "HEY BO DIDDLEY").iterator();
@@ -83,13 +92,16 @@ public class OrientSandbox {
             }});	
     }
 
-    public void insertFulltextTest(int numInserts) {
+    public void insertFulltextTest(int numInserts, boolean massiveInsertIntent) {
         Random rnd = new Random();
         final int block = 5000;
         final int totalWords = 100;
         int originalNumInserts = numInserts;
         int totalInserts = 0;
 
+        if (massiveInsertIntent)
+            this.setMassiveInsertIntent();
+        
         long start = System.currentTimeMillis();
 
         while (numInserts > 0) {
@@ -125,14 +137,19 @@ public class OrientSandbox {
 
         long end = System.currentTimeMillis();
 
+        this.clearIntent();
+
         System.out.println(totalInserts + " of " + originalNumInserts + " nodes inserted; took " + (end-start) + " ms.");
     }
 
-    public void insertTest(int numInserts) {
+    public void insertTest(int numInserts, boolean massiveInsertIntent) {
         final int block = 5000;
         int originalNumInserts = numInserts;
         int totalInserts = 0;
         int key = 0;
+
+        if (massiveInsertIntent)
+            this.setMassiveInsertIntent();
 
         long start = System.currentTimeMillis();
 
@@ -161,6 +178,8 @@ public class OrientSandbox {
         }
 
         long end = System.currentTimeMillis();
+
+        this.clearIntent();
 
         System.out.println(totalInserts + " of " + originalNumInserts + " nodes inserted; took " + (end-start) + " ms.");
     }

@@ -5,12 +5,23 @@ import com.orientechnologies.orient.core.metadata.schema.OClass;
 public class OrientBenchmarkingTests {
     private OrientSandbox os;
     private final String baseOrient;
+    private boolean declareMassiveInsert;
 
     public OrientBenchmarkingTests(String baseOrient) {
-        os = new OrientSandbox();
-        this.baseOrient = baseOrient;
+        this(baseOrient, false);
     }
 
+    public OrientBenchmarkingTests(String baseOrient, boolean declareMassiveInsertIntent) {
+        os = new OrientSandbox();
+        this.baseOrient = baseOrient;
+        
+        this.declareMassiveInsert = declareMassiveInsertIntent;            
+    }
+
+    public void setMassiveInsertIntent(boolean declareMassiveInsert) {
+        this.declareMassiveInsert = declareMassiveInsert;
+    }
+    
     public void testLuceneFulltext() {
         // LUCENE
         System.out.println("LUCENE");
@@ -18,7 +29,7 @@ public class OrientBenchmarkingTests {
 
         os.createTestVertexType();
         os.createFulltextIndex("LUCENE");
-        os.insertFulltextTest(500000);
+        os.insertFulltextTest(500000, this.declareMassiveInsert);
         os.shutdown();
 
         // SBTREE
@@ -27,7 +38,7 @@ public class OrientBenchmarkingTests {
 
         os.createTestVertexType();
         os.createFulltextIndex("SBTREE");
-        os.insertFulltextTest(500000);
+        os.insertFulltextTest(500000, this.declareMassiveInsert);
         os.shutdown();
 
         // NO INDEX
@@ -35,7 +46,7 @@ public class OrientBenchmarkingTests {
         os.connect(baseOrient + "NoIndexLuceneFulltextTestDB");
 
         os.createTestVertexType();
-        os.insertFulltextTest(500000);
+        os.insertFulltextTest(500000, this.declareMassiveInsert);
         os.shutdown();		
     }
 
@@ -46,7 +57,7 @@ public class OrientBenchmarkingTests {
 
         os.createTestVertexType();
         os.createIndex(OClass.INDEX_TYPE.UNIQUE);
-        os.insertTest(500000);
+        os.insertTest(500000, this.declareMassiveInsert);
         os.shutdown();
 
         // HASHINDEX
@@ -55,7 +66,7 @@ public class OrientBenchmarkingTests {
 
         os.createTestVertexType();
         os.createIndex(OClass.INDEX_TYPE.UNIQUE_HASH_INDEX);
-        os.insertTest(500000);
+        os.insertTest(500000, this.declareMassiveInsert);
         os.shutdown();
 
         // NO INDEX
@@ -63,7 +74,7 @@ public class OrientBenchmarkingTests {
         os.connect(baseOrient + "NoIndexUniqueTestDB");
 
         os.createTestVertexType();
-        os.insertTest(500000);
+        os.insertTest(500000, this.declareMassiveInsert);
         os.shutdown();
     }
 
@@ -74,7 +85,7 @@ public class OrientBenchmarkingTests {
 
         os.createTestVertexType();
         os.createIndex(OClass.INDEX_TYPE.NOTUNIQUE);
-        os.insertTest(500000);
+        os.insertTest(500000, this.declareMassiveInsert);
         os.shutdown();
 
         // HASHINDEX
@@ -83,7 +94,7 @@ public class OrientBenchmarkingTests {
 
         os.createTestVertexType();
         os.createIndex(OClass.INDEX_TYPE.NOTUNIQUE_HASH_INDEX);
-        os.insertTest(500000);
+        os.insertTest(500000, this.declareMassiveInsert);
         os.shutdown();
 
         // NO INDEX
@@ -91,7 +102,7 @@ public class OrientBenchmarkingTests {
         os.connect(baseOrient + "NoIndexNotUniqueTestDB");
 
         os.createTestVertexType();
-        os.insertTest(500000);
+        os.insertTest(500000, this.declareMassiveInsert);
         os.shutdown();
     }
 
@@ -103,7 +114,7 @@ public class OrientBenchmarkingTests {
 
         os.createTestVertexType();
         os.createIndex(OClass.INDEX_TYPE.DICTIONARY);
-        os.insertTest(500000);
+        os.insertTest(500000, this.declareMassiveInsert);
         os.shutdown();
 
         // HASHINDEX
@@ -112,7 +123,7 @@ public class OrientBenchmarkingTests {
 
         os.createTestVertexType();
         os.createIndex(OClass.INDEX_TYPE.DICTIONARY_HASH_INDEX);
-        os.insertTest(500000);
+        os.insertTest(500000, this.declareMassiveInsert);
         os.shutdown();
 
         // NO INDEX
@@ -120,7 +131,7 @@ public class OrientBenchmarkingTests {
         os.connect(baseOrient + "NoIndexDictTestDB");
 
         os.createTestVertexType();
-        os.insertTest(500000);
+        os.insertTest(500000, this.declareMassiveInsert);
         os.shutdown();
     }
 
@@ -131,7 +142,7 @@ public class OrientBenchmarkingTests {
 
         os.createTestVertexType();
         os.createIndex(OClass.INDEX_TYPE.FULLTEXT);
-        os.insertFulltextTest(500000);
+        os.insertFulltextTest(500000, this.declareMassiveInsert);
         os.shutdown();
 
         // HASHINDEX
@@ -140,7 +151,7 @@ public class OrientBenchmarkingTests {
 
         os.createTestVertexType();
         os.createIndex(OClass.INDEX_TYPE.FULLTEXT_HASH_INDEX);
-        os.insertFulltextTest(500000);
+        os.insertFulltextTest(500000, this.declareMassiveInsert);
         os.shutdown();
 
         // NO INDEX
@@ -148,8 +159,7 @@ public class OrientBenchmarkingTests {
         os.connect(baseOrient + "NoIndexFulltextTestDB");
 
         os.createTestVertexType();
-        os.insertFulltextTest(500000);
+        os.insertFulltextTest(500000, this.declareMassiveInsert);
         os.shutdown();
     }
-
 }
