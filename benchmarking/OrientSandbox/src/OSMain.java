@@ -15,12 +15,30 @@ public class OSMain {
         //obt.testNotUnique();
         //obt.testDictionary();
         
-        // tx-based, "massive insertion
+        // tx-based, "massive insertion"
         //obt.setMassiveInsertIntent(true);
         //obt.testLuceneFulltext();
         //obt.testFulltext();
         //obt.testUnique();
         //obt.testNotUnique();
+        
+        OrientNoTxBenchmarkingTests ontbt = new OrientNoTxBenchmarkingTests(baseOrient);
+
+        // non-tx based, no modification
+        //ontbt.setMassiveInsertIntent(false);
+        //ontbt.testLuceneFulltext();
+        //ontbt.testFulltext();
+        //ontbt.testUnique();
+        //ontbt.testNotUnique();
+        //ontbt.testDictionary();
+        
+        // non-tx based, "massive insertion"
+        //ontbt.setMassiveInsertIntent(true);
+        //ontbt.testLuceneFulltext();
+        //ontbt.testFulltext();
+        //ontbt.testUnique();
+        //ontbt.testNotUnique();
+
     }
 
 }

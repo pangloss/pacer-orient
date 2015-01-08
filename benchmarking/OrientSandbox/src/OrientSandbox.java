@@ -22,7 +22,7 @@ public class OrientSandbox {
         this.graph = new OrientGraph(connection, "admin", "admin");
         this.tGraph = graph;
     }
-
+    
     private void setMassiveInsertIntent() {
         this.graph.declareIntent(new OIntentMassiveInsert());
     }
