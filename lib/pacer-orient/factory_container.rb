@@ -19,6 +19,8 @@ module Pacer::Orient
         if min and max
           setupPool min, max
         end
+      else
+        @encoder = Encoder
       end
     end
 
